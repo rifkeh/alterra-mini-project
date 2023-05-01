@@ -1,0 +1,69 @@
+package controller
+
+import (
+	"miniproject/config"
+	"miniproject/model"
+
+	"github.com/labstack/echo/v4"
+)
+
+func GetStudentsController(c echo.Context) error {
+	var students []model.Student
+	if err := config.DB.Find(&students).Error; err != nil {
+		return echo.NewHTTPError(400, err.Error())
+	}
+	return c.JSON(200, echo.Map{
+		"message": "success get all students",
+		"students": students,
+	})
+}
+
+func CreateStudentController(c echo.Context) error {
+	var student model.Student
+	c.Bind(&student)
+
+	if err := config.DB.Save(&student).Error; err != nil {
+		return echo.NewHTTPError(400, err.Error())
+	}
+	return c.JSON(200, echo.Map{
+		"message": "success create student",
+		"student": student,
+	})
+}
+
+func UpdateStudentController(c echo.Context) error {
+	var student model.Student
+	c.Bind(&student)
+	studentID := c.Param("id")
+	if err := config.DB.Where("id = ?", studentID).Updates(&student).Error; err != nil {
+		return echo.NewHTTPError(400, err.Error())
+	}
+	return c.JSON(200, echo.Map{
+		"message": "success update student",
+		"student": student,
+	})
+}
+
+func DeleteStudentController(c echo.Context) error {
+	var student model.Student
+	studentID := c.Param("id")
+	if err := config.DB.Where("id = ?", studentID).Delete(&student).Error; err != nil {
+		return echo.NewHTTPError(400, err.Error())
+	}
+	return c.JSON(200, echo.Map{
+		"message": "success delete student",
+		"student": student,
+	})
+}
+
+func GetStudentController(c echo.Context) error {
+	var student model.Student
+	studentID := c.Param("id")
+	if err := config.DB.Where("id = ?", studentID).First(&student).Error; err != nil {
+		return echo.NewHTTPError(400, err.Error())
+	}
+	return c.JSON(200, echo.Map{
+		"message": "success get student",
+		"student": student,
+	})
+}
