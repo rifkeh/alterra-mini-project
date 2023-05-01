@@ -9,7 +9,8 @@ type Student struct {
 	Name       string
 	Email      string
 	Password   string
-	Enrollment []Enrollment
+	Enrollment []Enrollment `gorm:"foreignKey:StudentID"`
+	Submission []Submission `gorm:"foreignKey:StudentID"`
 }
 
 type Teacher struct {
@@ -17,8 +18,7 @@ type Teacher struct {
 	Name       string
 	Email      string
 	Password   string
-	Enrollment []Enrollment
-	Classes    []Class
+	Classes    []Class `gorm:"foreignKey:TeacherID"`
 }
 
 type Enrollment struct {
@@ -32,8 +32,8 @@ type Class struct {
 	TeacherID   uint
 	Name        string
 	Description string
-	Assignment  []Assignment
-	Material    []Material
+	Assignment  []Assignment `gorm:"foreignKey:ClassID"`
+	Material    []Material`gorm:"foreignKey:ClassID"`
 }
 
 type Assignment struct {
