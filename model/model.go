@@ -48,3 +48,10 @@ type Material struct {
 	ClassID     uint
 	Description string
 }
+
+type Submission struct {
+	gorm.Model
+	AssignmentID uint
+	StudentID    uint
+	Link         string
+}
