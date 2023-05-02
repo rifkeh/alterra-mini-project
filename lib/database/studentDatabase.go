@@ -20,5 +20,9 @@ func LoginStudent(student *model.Student) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	// student.LastLogin = config.DB.NowFunc()
+	if err := config.DB.Save(&student).Error; err != nil {
+		return nil, err
+	}
 	return studentResp, nil
 }

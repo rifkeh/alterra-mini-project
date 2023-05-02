@@ -1,47 +1,73 @@
 package route
 
 import (
+	"miniproject/constant"
 	"miniproject/controller"
+	"miniproject/middleware"
 
+	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 )
 
 func New() *echo.Echo{
 	e := echo.New()
-	e.GET("/teachers", controller.GetTeachersController)
+	t := e.Group("")
+	s := e.Group("")
+	s.Use(echojwt.JWT([]byte(constant.STUDENT_JWT)))
+	t.Use(echojwt.JWT([]byte(constant.TEACHER_JWT)))
+	middleware.LogMiddleware(e)
+	// Teacher Routes
+	t.GET("/teachers", controller.GetTeachersController)
 	e.POST("/teacher", controller.CreateTeacherController)
-	e.PUT("/teacher/:id", controller.UpdateTeacherController)
-	e.DELETE("/teacher/:id", controller.DeleteTeacherController)
-	e.GET("/teacher/:id", controller.GetTeacherController)
+	t.PUT("/teacher/:id", controller.UpdateTeacherController)
+	t.DELETE("/teacher/:id", controller.DeleteTeacherController)
+	t.GET("/teacher/:id", controller.GetTeacherController)
+	e.POST("/teacher/login", controller.LoginTeacherController)
+	// Class Routes
 	e.GET("/classes", controller.GetClassesController)
 	e.POST("/class", controller.CreateClassController)
 	e.PUT("/class/:id", controller.UpdateClassController)
 	e.DELETE("/class/:id", controller.DeleteClassController)
 	e.GET("/class/:id", controller.GetClassController)
-	e.GET("/students", controller.GetStudentsController)
+	// Student Routes
+	s.GET("/students", controller.GetStudentsController)
 	e.POST("/student", controller.CreateStudentController)
-	e.PUT("/student/:id", controller.UpdateStudentController)
-	e.DELETE("/student/:id", controller.DeleteStudentController)
-	e.GET("/student/:id", controller.GetStudentController)
-	e.GET("/enrollments", controller.GetEnrollController)
-	e.POST("/enrollment", controller.CreateEnrollController)
-	e.PUT("/enrollment/:id", controller.UpdateEnrollController)
-	e.DELETE("/enrollment/:id", controller.DeleteEnrollController)
-	e.GET("/enrollment/:id", controller.GetEnrollController)
-	e.GET("/assignments", controller.GetAssignmentsController)
-	e.POST("/assignment", controller.CreateAssignmentController)
-	e.PUT("/assignment/:id", controller.UpdateAssignmentController)
-	e.DELETE("/assignment/:id", controller.DeleteAssignmentController)
-	e.GET("/assignment/:id", controller.GetAssignmentController)
-	e.GET("/submissions", controller.GetSubmissionsController)
-	e.POST("/submission", controller.CreateSubmissionController)
-	e.PUT("/submission/:id", controller.UpdateSubmissionController)
-	e.DELETE("/submission/:id", controller.DeleteSubmissionController)
-	e.GET("/submission/:id", controller.GetSubmissionController)
-	e.GET("/materials", controller.GetMaterialsController)
-	e.POST("/material", controller.CreateMaterialController)
-	e.PUT("/material/:id", controller.UpdateMaterialController)
-	e.DELETE("/material/:id", controller.DeleteMaterialController)
-	e.GET("/material/:id", controller.GetMaterialController)
+	s.PUT("/student/:id", controller.UpdateStudentController)
+	s.DELETE("/student/:id", controller.DeleteStudentController)
+	s.GET("/student/:id", controller.GetStudentController)
+	e.POST("/student/login", controller.LoginStudentController)
+	// Enrollment Routes
+	s.GET("/enrollments", controller.GetEnrollController)
+	s.POST("/enrollment", controller.CreateEnrollController)
+	s.DELETE("/enrollment/:id", controller.DeleteEnrollController)
+	s.GET("/enrollment/:id", controller.GetEnrollController)
+	t.DELETE("/enrollment/:id", controller.DeleteEnrollController)
+	t.GET("/enrollments", controller.GetEnrollController)
+	t.GET("/enrollment/:id", controller.GetEnrollController)
+	// Assignment Routes
+	t.GET("/assignments", controller.GetAssignmentsController)
+	t.POST("/assignment", controller.CreateAssignmentController)
+	t.PUT("/assignment/:id", controller.UpdateAssignmentController)
+	t.DELETE("/assignment/:id", controller.DeleteAssignmentController)
+	t.GET("/assignment/:id", controller.GetAssignmentController)
+	s.GET("/assignments", controller.GetAssignmentsController)
+	s.GET("/assignment/:id", controller.GetAssignmentController)
+	// Submission Routes
+	t.GET("/submissions", controller.GetSubmissionsController)
+	s.POST("/submission", controller.CreateSubmissionController)
+	t.PUT("/submission/:id", controller.UpdateSubmissionController)
+	s.DELETE("/submission/:id", controller.DeleteSubmissionController)
+	t.GET("/submission/:id", controller.GetSubmissionController)
+	s.GET("/submissions", controller.GetSubmissionsController)
+	t.DELETE("/submission/:id", controller.DeleteSubmissionController)
+	s.GET("/submission/:id", controller.GetSubmissionController)
+	// Material Routes
+	t.GET("/materials", controller.GetMaterialsController)
+	t.POST("/material", controller.CreateMaterialController)
+	t.PUT("/material/:id", controller.UpdateMaterialController)
+	t.DELETE("/material/:id", controller.DeleteMaterialController)
+	t.GET("/material/:id", controller.GetMaterialController)
+	s.GET("/materials", controller.GetMaterialsController)
+	s.GET("/material/:id", controller.GetMaterialController)
 	return e
 }
