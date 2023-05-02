@@ -2,6 +2,7 @@ package controller
 
 import (
 	"miniproject/config"
+	"miniproject/lib/database"
 	"miniproject/model"
 	"net/http"
 
@@ -67,5 +68,20 @@ func GetTeacherController(c echo.Context)error{
 	return c.JSON(http.StatusOK, echo.Map{
 		"message": "success get teacher",
 		"teacher": teacher,
+	})
+}
+
+func LoginTeacherController(c echo.Context) error{
+	teacher := model.Teacher{}
+	c.Bind(&teacher)
+
+	teachers, err := database.LoginTeacher(&teacher)
+
+	if err != nil {
+		return echo.NewHTTPError(400, err.Error())
+	}
+	return c.JSON(200, echo.Map{
+		"message": "success login teacher",
+		"teacher": teachers,
 	})
 }

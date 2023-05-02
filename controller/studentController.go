@@ -2,6 +2,7 @@ package controller
 
 import (
 	"miniproject/config"
+	"miniproject/lib/database"
 	"miniproject/model"
 
 	"github.com/labstack/echo/v4"
@@ -65,5 +66,20 @@ func GetStudentController(c echo.Context) error {
 	return c.JSON(200, echo.Map{
 		"message": "success get student",
 		"student": student,
+	})
+}
+
+func LoginStudentController(c echo.Context) error{
+	student := model.Student{}
+	c.Bind(&student)
+
+	students, err := database.LoginStudent(&student)
+
+	if err != nil {
+		return echo.NewHTTPError(400, err.Error())
+	}
+	return c.JSON(200, echo.Map{
+		"message": "success login student",
+		"student": students,
 	})
 }
