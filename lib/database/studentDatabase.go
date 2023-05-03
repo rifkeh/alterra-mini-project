@@ -4,6 +4,8 @@ import (
 	"miniproject/config"
 	"miniproject/middleware"
 	"miniproject/model"
+
+	sendinblue "github.com/CyCoreSystems/sendinblue"
 )
 
 func LoginStudent(student *model.Student) (interface{}, error) {
@@ -25,4 +27,23 @@ func LoginStudent(student *model.Student) (interface{}, error) {
 		return nil, err
 	}
 	return studentResp, nil
+}
+
+
+func SendEmail(toEmail string) error {
+	sender := sendinblue.Address{
+		Name:  "Miniproject",
+		Email: "test@example.com",
+	}
+	recipient := sendinblue.Address{
+		Name:  "Rifkhi",
+		Email: "rifkhihebat@gmail.com",
+	}
+    message := sendinblue.Message{
+		Sender: &sender,
+		To:     []*sendinblue.Address{&recipient},
+		Subject: "Account Creation",
+		TextContent:    "OTP: test",
+	}
+	return message.Send("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")
 }

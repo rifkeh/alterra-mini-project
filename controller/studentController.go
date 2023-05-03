@@ -6,6 +6,7 @@ import (
 	"miniproject/model"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 )
 
 func GetStudentsController(c echo.Context) error {
@@ -21,16 +22,24 @@ func GetStudentsController(c echo.Context) error {
 
 func CreateStudentController(c echo.Context) error {
 	var student model.Student
+	var OTP string
 	c.Bind(&student)
-
-	if err := config.DB.Save(&student).Error; err != nil {
-		return echo.NewHTTPError(400, err.Error())
+	if err := database.SendEmail(student.Email); err != nil {
+		log.Error("Failed to send account creation email:", err)
 	}
-	return c.JSON(200, echo.Map{
-		"message": "success create student",
-		"student": student,
-	})
+	if OTP == "test"{
+		if err := config.DB.Save(&student).Error; err != nil {
+			return echo.NewHTTPError(400, err.Error())
+		}
+		return c.JSON(200, echo.Map{
+			"message": "success create student",
+			"student": student,
+		})
+	} else {
+		return echo.NewHTTPError(400, "OTP is wrong")
+	}
 }
+	
 
 func UpdateStudentController(c echo.Context) error {
 	var student model.Student
