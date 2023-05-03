@@ -55,5 +55,5 @@ type Submission struct {
 	gorm.Model
 	AssignmentID uint	`json:"assignment_id" form:"assignment_id"`
 	StudentID    uint	`json:"student_id" form:"student_id"`
-	Link         string	`json:"link" form:"link"`
+	File         []byte	`json:"file" form:"file"`
 }

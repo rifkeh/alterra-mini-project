@@ -35,4 +35,5 @@ func InitMigrate() {
 	DB.AutoMigrate(&model.Enrollment{})
 	DB.AutoMigrate(&model.Assignment{})
 	DB.AutoMigrate(&model.Material{})
+	DB.AutoMigrate(&model.Submission{})
 }
