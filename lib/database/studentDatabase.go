@@ -30,14 +30,14 @@ func LoginStudent(student *model.Student) (interface{}, error) {
 }
 
 
-func SendEmail(toEmail string) error {
+func SendEmail(toName, toEmail string) error {
 	sender := sendinblue.Address{
 		Name:  "Miniproject",
 		Email: "test@example.com",
 	}
 	recipient := sendinblue.Address{
-		Name:  "Rifkhi",
-		Email: "rifkhihebat@gmail.com",
+		Name:  toName,
+		Email: toEmail,
 	}
     message := sendinblue.Message{
 		Sender: &sender,

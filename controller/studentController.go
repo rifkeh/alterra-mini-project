@@ -24,9 +24,7 @@ func CreateStudentController(c echo.Context) error {
 	var student model.Student
 	var OTP string
 	c.Bind(&student)
-	if err := database.SendEmail(student.Email); err != nil {
-		log.Error("Failed to send account creation email:", err)
-	}
+	OTP = c.FormValue("OTP")
 	if OTP == "test"{
 		if err := config.DB.Save(&student).Error; err != nil {
 			return echo.NewHTTPError(400, err.Error())
@@ -36,6 +34,9 @@ func CreateStudentController(c echo.Context) error {
 			"student": student,
 		})
 	} else {
+		if err := database.SendEmail(student.Name, student.Email); err != nil {
+			log.Error("Failed to send account creation email:", err)
+		}
 		return echo.NewHTTPError(400, "OTP is wrong")
 	}
 }
