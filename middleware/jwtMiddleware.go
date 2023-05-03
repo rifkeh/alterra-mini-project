@@ -24,3 +24,12 @@ func CreateStudentToken(studentID int)(string , error){
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256,claims)
 	return token.SignedString([]byte(constant.STUDENT_JWT))
 }
+
+func ExtractStudentIdToken(token string)(float64){
+	claims := jwt.MapClaims{}
+	tempToken , _ := jwt.ParseWithClaims(token,claims,func(tempToken *jwt.Token)(interface{},error){
+		return []byte(constant.STUDENT_JWT),nil
+	},
+	)
+	return tempToken.Claims.(jwt.MapClaims)["studentID"].(float64)
+}
