@@ -66,13 +66,17 @@ func UpdateStudentController(c echo.Context) error {
 func DeleteStudentController(c echo.Context) error {
 	var student model.Student
 	studentID := c.Param("id")
-	if err := config.DB.Where("id = ?", studentID).Delete(&student).Error; err != nil {
-		return echo.NewHTTPError(400, err.Error())
+	floatStudentID , _:= strconv.ParseFloat(studentID, 64)
+	if middleware.ExtractStudentIdToken(strings.Replace(c.Request().Header.Get("Authorization"), "Bearer ", "", -1)) == floatStudentID{
+		if err := config.DB.Where("id = ?", studentID).Delete(&student).Error; err != nil {
+			return echo.NewHTTPError(400, err.Error())
+		}
+		return c.JSON(200, echo.Map{
+			"message": "success delete student",
+			"student": student,
+		})
 	}
-	return c.JSON(200, echo.Map{
-		"message": "success delete student",
-		"student": student,
-	})
+	return echo.NewHTTPError(400, "You are not authorized to delete this student")
 }
 
 func GetStudentController(c echo.Context) error {

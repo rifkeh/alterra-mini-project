@@ -53,12 +53,12 @@ func New() *echo.Echo{
 	s.GET("/assignments", controller.GetAssignmentsController)
 	s.GET("/assignment/:id", controller.GetAssignmentController)
 	// Submission Routes
-	t.GET("/submissions", controller.GetSubmissionsController)
+	t.GET("/submissions", controller.GetAllSubmissionsControllerById)
 	s.POST("/submission", controller.CreateSubmissionController)
 	t.PUT("/submission/:id", controller.UpdateSubmissionController)
 	s.DELETE("/submission/:id", controller.DeleteSubmissionController)
 	t.GET("/submission/:id", controller.GetSubmissionController)
-	s.GET("/submissions", controller.GetSubmissionsController)
+	s.GET("/submissions/:id", controller.GetAllSubmissionsControllerById)
 	t.DELETE("/submission/:id", controller.DeleteSubmissionController)
 	s.GET("/submission/:id", controller.GetSubmissionController)
 	// Material Routes
