@@ -3,8 +3,11 @@ package controller
 import (
 	"miniproject/config"
 	"miniproject/lib/database"
+	"miniproject/middleware"
 	"miniproject/model"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
@@ -66,14 +69,17 @@ func UpdateTeacherController(c echo.Context) error{
 	var teacher model.Teacher
 	c.Bind(&teacher)
 	teacherID := c.Param("id")
-	
-	if err := config.DB.Where("id = ?", teacherID).Updates(&teacher).Error; err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	floatTeacherId , _:= strconv.ParseFloat(teacherID, 64)
+	if middleware.ExtractTeacherIdToken(strings.Replace(c.Request().Header.Get("Authorization"), "Bearer ", "", -1)) == floatTeacherId{
+		if err := config.DB.Where("id = ?", teacherID).Updates(&teacher).Error; err != nil {
+			return echo.NewHTTPError(400, err.Error())
+		}
+		return c.JSON(200, echo.Map{
+			"message": "success update teacher",
+			"teacher": teacher,
+		})
 	}
-	return c.JSON(http.StatusOK, echo.Map{
-		"message": "success update teacher",
-		"teacher": teacher,
-	})
+	return echo.NewHTTPError(400, "You are not authorized to update this teacher")
 }
 
 func DeleteTeacherController(c echo.Context) error{
