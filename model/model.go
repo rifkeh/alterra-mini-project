@@ -57,3 +57,9 @@ type Submission struct {
 	StudentID    int	`json:"student_id" form:"student_id"`
 	File         []byte	`json:"file" form:"file"`
 }
+
+type Otp struct {
+	Id	int ``
+	StudentOTP string `json:"student_otp" form:"student_otp"`
+	TeacherOTP string `json:"teacher_otp" form:"teacher_otp"`
+}
