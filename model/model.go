@@ -25,13 +25,13 @@ type Teacher struct {
 
 type Enrollment struct {
 	gorm.Model
-	StudentID uint	`json:"student_id" form:"student_id"`
-	ClassID   uint	`json:"class_id" form:"class_id"`
+	StudentID int	`json:"student_id" form:"student_id"`
+	ClassID   int	`json:"class_id" form:"class_id"`
 }
 
 type Class struct {
 	gorm.Model
-	TeacherID   uint	`json:"teacher_id" form:"teacher_id"`
+	TeacherID   int	`json:"teacher_id" form:"teacher_id"`
 	Name        string	`json:"name" form:"name"`
 	Description string	`json:"description" form:"description"`
 	Assignment  []Assignment `gorm:"foreignKey:ClassID"`
@@ -40,20 +40,26 @@ type Class struct {
 
 type Assignment struct {
 	gorm.Model
-	ClassID     uint	`json:"class_id" form:"class_id"`
+	ClassID     int	`json:"class_id" form:"class_id"`
 	Description string	`json:"description" form:"description"`
 	Deadline    string	`json:"deadline" form:"deadline"`
 }
 
 type Material struct {
 	gorm.Model
-	ClassID     uint	`json:"class_id" form:"class_id"`
+	ClassID     int	`json:"class_id" form:"class_id"`
 	Description string	`json:"description" form:"description"`
 }
 
 type Submission struct {
 	gorm.Model
-	AssignmentID uint	`json:"assignment_id" form:"assignment_id"`
-	StudentID    uint	`json:"student_id" form:"student_id"`
-	Link         string	`json:"link" form:"link"`
+	AssignmentID int	`json:"assignment_id" form:"assignment_id"`
+	StudentID    int	`json:"student_id" form:"student_id"`
+	File         []byte	`json:"file" form:"file"`
+}
+
+type Otp struct {
+	Id	int ``
+	StudentOTP string `json:"student_otp" form:"student_otp"`
+	TeacherOTP string `json:"teacher_otp" form:"teacher_otp"`
 }
