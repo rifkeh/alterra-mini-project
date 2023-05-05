@@ -3,10 +3,14 @@ package controller
 import (
 	"miniproject/config"
 	"miniproject/lib/database"
+	"miniproject/middleware"
 	"miniproject/model"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 )
 
 func GetTeachersController(c echo.Context) error{
@@ -23,28 +27,59 @@ func GetTeachersController(c echo.Context) error{
 
 func CreateTeacherController(c echo.Context) error{
 	var teacher model.Teacher
+	var tempOTP model.Otp
+	var OTP string
 	c.Bind(&teacher)
+	OTP = c.FormValue("OTP")
+	if OTP == ""{
+		tempOTP.Id = 1
+		tempOTP.TeacherOTP = database.GenerateToken()
+		if err := config.DB.Save(&tempOTP).Error; err != nil {
+			return echo.NewHTTPError(400, "Failed to create OTP")
+		}
+		if err := database.SendEmail(teacher.Name, teacher.Email, tempOTP.TeacherOTP); err != nil {
+			log.Error("Failed to send account creation email:", err)
+		}
+		return echo.NewHTTPError(400, "See your email for OTP")
 
-	if err:=config.DB.Save(&teacher).Error; err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}else{
+		if err := config.DB.Find(&tempOTP).Error; err != nil {
+			return echo.NewHTTPError(400, "OTP not found")
+		}
+		if tempOTP.TeacherOTP == OTP{
+			tempOTP.Id = 1
+			tempOTP.TeacherOTP = ""
+			if err := config.DB.Save(&tempOTP).Error; err != nil {
+				return echo.NewHTTPError(400, "Failed to create OTP")
+			}
+			if err := config.DB.Save(&teacher).Error; err != nil {
+				return echo.NewHTTPError(400, err.Error())
+			}
+			return c.JSON(200, echo.Map{
+				"message": "success create teacher",
+				"teacher": teacher,
+			})
+		}else{
+			return echo.NewHTTPError(400, "Wrong OTP")
+		}
 	}
-	return c.JSON(http.StatusOK, echo.Map{
-		"message": "success create teacher",
-		"teacher": teacher,
-	})
 }
 
 func UpdateTeacherController(c echo.Context) error{
 	var teacher model.Teacher
 	c.Bind(&teacher)
 	teacherID := c.Param("id")
-	if err := config.DB.Where("id = ?", teacherID).Updates(&teacher).Error; err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	floatTeacherId , _:= strconv.ParseFloat(teacherID, 64)
+	if middleware.ExtractTeacherIdToken(strings.Replace(c.Request().Header.Get("Authorization"), "Bearer ", "", -1)) == floatTeacherId{
+		if err := config.DB.Where("id = ?", teacherID).Updates(&teacher).Error; err != nil {
+			return echo.NewHTTPError(400, err.Error())
+		}
+		return c.JSON(200, echo.Map{
+			"message": "success update teacher",
+			"teacher": teacher,
+		})
 	}
-	return c.JSON(http.StatusOK, echo.Map{
-		"message": "success update teacher",
-		"teacher": teacher,
-	})
+	return echo.NewHTTPError(400, "You are not authorized to update this teacher")
 }
 
 func DeleteTeacherController(c echo.Context) error{
