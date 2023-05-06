@@ -3,10 +3,12 @@ package controller
 import (
 	"miniproject/config"
 	"miniproject/lib/database"
+	"miniproject/lib/email"
 	"miniproject/middleware"
 	"miniproject/model"
+	"net/http"
 	"strconv"
-	"strings"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
@@ -14,7 +16,7 @@ import (
 
 func GetStudentsController(c echo.Context) error {
 	var students []model.Student
-	if err := config.DB.Find(&students).Error; err != nil {
+	if err := config.DB.Preload("Enrollment").Find(&students).Error; err != nil {
 		return echo.NewHTTPError(400, err.Error())
 	}
 	return c.JSON(200, echo.Map{
@@ -31,11 +33,11 @@ func CreateStudentController(c echo.Context) error {
 	OTP = c.FormValue("OTP")
 	if OTP == ""{
 		tempOTP.Id = 1
-		tempOTP.StudentOTP = database.GenerateToken()
+		tempOTP.StudentOTP = email.GenerateOTP()
 		if err := config.DB.Save(&tempOTP).Error; err != nil {
 			return echo.NewHTTPError(400, "Failed to create OTP")
 		}
-		if err := database.SendEmail(student.Name, student.Email, tempOTP.StudentOTP); err != nil {
+		if err := email.SendEmail(student.Name, student.Email, tempOTP.StudentOTP); err != nil {
 			log.Error("Failed to send account creation email:", err)
 		}
 		return echo.NewHTTPError(400, "See your email for OTP")
@@ -67,9 +69,12 @@ func CreateStudentController(c echo.Context) error {
 func UpdateStudentController(c echo.Context) error {
 	var student model.Student
 	c.Bind(&student)
-	studentID := c.Param("id")
-	floatStudentID , _:= strconv.ParseFloat(studentID, 64)
-	if middleware.ExtractStudentIdToken(strings.Replace(c.Request().Header.Get("Authorization"), "Bearer ", "", -1)) == floatStudentID{
+	studentID, _ := strconv.ParseFloat(c.Param("id"), 64)
+	cookie, err := c.Cookie("StudentSessionID")
+	if err != nil{
+		return c.JSON(400, "Session expired, login again")
+	}
+	if middleware.ExtractStudentIdToken(cookie.Value) == studentID{
 		if err := config.DB.Where("id = ?", studentID).Updates(&student).Error; err != nil {
 			return echo.NewHTTPError(400, err.Error())
 		}
@@ -84,9 +89,12 @@ func UpdateStudentController(c echo.Context) error {
 
 func DeleteStudentController(c echo.Context) error {
 	var student model.Student
-	studentID := c.Param("id")
-	floatStudentID , _:= strconv.ParseFloat(studentID, 64)
-	if middleware.ExtractStudentIdToken(strings.Replace(c.Request().Header.Get("Authorization"), "Bearer ", "", -1)) == floatStudentID{
+	studentID, _ := strconv.ParseFloat(c.Param("id"), 64)
+	cookie, err := c.Cookie("StudentSessionID")
+	if err != nil{
+		return c.JSON(400, "Session expired, login again")
+	}
+	if middleware.ExtractStudentIdToken(cookie.Value) == studentID{
 		if err := config.DB.Where("id = ?", studentID).Delete(&student).Error; err != nil {
 			return echo.NewHTTPError(400, err.Error())
 		}
@@ -119,8 +127,14 @@ func LoginStudentController(c echo.Context) error{
 	if err != nil {
 		return echo.NewHTTPError(400, err.Error())
 	}
+	jwtToken := students["Token"]
+	cookie := new(http.Cookie)
+	cookie.Name = "StudentSessionID"
+	cookie.Value = jwtToken
+	cookie.Path = "/"
+	cookie.Expires = time.Now().Add(24 * time.Hour)
+	c.SetCookie(cookie)
 	return c.JSON(200, echo.Map{
 		"message": "success login student",
-		"student": students,
 	})
 }

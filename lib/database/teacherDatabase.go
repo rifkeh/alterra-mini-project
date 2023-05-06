@@ -6,12 +6,12 @@ import (
 	"miniproject/model"
 )
 
-func LoginTeacher(teacher *model.Teacher) (interface{}, error) {
+func LoginTeacher(teacher *model.Teacher) (map[string]string, error) {
 	var err error
 	if err = config.DB.Where("email = ? AND password = ?", teacher.Email, teacher.Password).First(&teacher).Error; err != nil {
 		return nil, err
 	}
-	teacherResp := map[string]interface{}{
+	teacherResp := map[string]string{
 		"Name":  teacher.Name,
 		"Email": teacher.Email,
 		"Token" : "",

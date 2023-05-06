@@ -2,6 +2,7 @@ package controller
 
 import (
 	"miniproject/config"
+	"miniproject/middleware"
 	"miniproject/model"
 	"net/http"
 
@@ -10,7 +11,7 @@ import (
 
 func GetClassesController(c echo.Context) error {
 	var classes []model.Class
-	if err := config.DB.Find(&classes).Error; err != nil {
+	if err := config.DB.Limit(5).Find(&classes).Error; err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return c.JSON(http.StatusOK, echo.Map{
@@ -22,7 +23,12 @@ func GetClassesController(c echo.Context) error {
 func CreateClassController(c echo.Context) error {
 	var class model.Class
 	c.Bind(&class)
-
+	cookie, err := c.Cookie("TeacherSessionID")
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	jwtToken := cookie.Value
+	class.TeacherID = int(middleware.ExtractTeacherIdToken(jwtToken))
 	if err := config.DB.Save(&class).Error; err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
