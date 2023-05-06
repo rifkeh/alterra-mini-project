@@ -16,7 +16,7 @@ import (
 
 func GetTeachersController(c echo.Context) error{
 	var teachers []model.Teacher
-	if err := config.DB.Find(&teachers).Error; err != nil {
+	if err := config.DB.Preload("Classes").Find(&teachers).Error; err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return c.JSON(http.StatusOK, echo.Map{
@@ -110,7 +110,7 @@ func DeleteTeacherController(c echo.Context) error{
 func GetTeacherController(c echo.Context)error{
 	var teacher model.Teacher
 	teacherID := c.Param("id")
-	if err := config.DB.Where("id = ?", teacherID).Find(&teacher).Error; err != nil {
+	if err := config.DB.Where("id = ?", teacherID).Preload("Classes").Find(&teacher).Error; err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return c.JSON(http.StatusOK, echo.Map{

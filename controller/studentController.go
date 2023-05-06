@@ -16,7 +16,7 @@ import (
 
 func GetStudentsController(c echo.Context) error {
 	var students []model.Student
-	if err := config.DB.Find(&students).Error; err != nil {
+	if err := config.DB.Preload("Enrollment").Find(&students).Error; err != nil {
 		return echo.NewHTTPError(400, err.Error())
 	}
 	return c.JSON(200, echo.Map{
