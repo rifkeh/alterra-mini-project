@@ -18,7 +18,7 @@ func New() *echo.Echo{
 	middleware.LogMiddleware(e)
 	// Teacher Routes
 	t.GET("/teachers", controller.GetTeachersController)
-	e.POST("/teacher", controller.CreateTeacherController)
+	e.POST("/teacher/register", controller.CreateTeacherController)
 	t.PUT("/teacher/:id", controller.UpdateTeacherController)
 	t.DELETE("/teacher/:id", controller.DeleteTeacherController)
 	t.GET("/teacher/:id", controller.GetTeacherController)
@@ -31,7 +31,9 @@ func New() *echo.Echo{
 	e.GET("/class/:id", controller.GetClassController)
 	// Student Routes
 	s.GET("/students", controller.GetStudentsController)
-	e.POST("/student", controller.CreateStudentController)
+	t.GET("/students", controller.GetStudentsController)
+	t.GET("/student/:id", controller.GetStudentController)
+	e.POST("/student/register", controller.CreateStudentController)
 	s.PUT("/student/:id", controller.UpdateStudentController)
 	s.DELETE("/student/:id", controller.DeleteStudentController)
 	s.GET("/student/:id", controller.GetStudentController)
@@ -53,14 +55,7 @@ func New() *echo.Echo{
 	s.GET("/assignments", controller.GetAssignmentsController)
 	s.GET("/assignment/:id", controller.GetAssignmentController)
 	// Submission Routes
-	// t.GET("/assignment/:assignmentid/submissions", controller.GetAllSubmissionsControllerByassignment)
-	// s.POST("/assignment/:assignmentid/submission", controller.CreateSubmissionController)
-	// t.PUT("/assignment/:assignmentid/submission/:id", controller.UpdateSubmissionController)
 	s.DELETE("/assignment/:assignmentid/submission/:id", controller.DeleteSubmissionController)
-	// t.GET("/assignment/:assignmentid/submission/:id", controller.GetSubmissionControllerById)
-	// s.GET("/assignment/:assignmentid/submissions/:id", controller.GetAllSubmissionsControllerByassignment)
-	// t.DELETE("/assignment/:assignmentid/submission/:id", controller.DeleteSubmissionController)
-	// s.GET("/assignment/:assignmentid/submission/:id", controller.GetSubmissionControllerById)
 	s.POST("/assignment/:assigmentid/submission", controller.CreateSubmissionController)
 	s.GET("/assignment/:assignmentid/submission", controller.GetAllSubmissionsControllerByAssignment)
 	// Material Routes
