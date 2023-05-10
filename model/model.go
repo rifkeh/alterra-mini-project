@@ -4,6 +4,11 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+type StudentClass struct {
+	Student []Student `gorm:"many2many:student_classes;"`
+	Class []Class `gorm:"many2many:student_classes;"`
+}
+
 type Student struct {
 	gorm.Model
 	Name       string	`json:"name" form:"name" gorm:"unique"`
@@ -41,9 +46,11 @@ type Class struct {
 type Assignment struct {
 	gorm.Model
 	ClassID     int	`json:"class_id" form:"class_id"`
-	Title	   string	`json:"title" form:"title" gorm:"unique;not null"`
+	Title	   string	`json:"title" form:"title" gorm:"not null"`
 	Description string	`json:"description" form:"description" gorm:"not null"`
+	File		*[]byte	`json:"file" form:"file"`
 	Deadline    string	`json:"deadline" form:"deadline" gorm:"not null"`
+	Submission Submission `gorm:"foreignKey:AssignmentID"`
 }
 
 type Material struct {

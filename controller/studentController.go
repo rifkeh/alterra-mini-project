@@ -19,9 +19,22 @@ func GetStudentsController(c echo.Context) error {
 	if err := config.DB.Preload("Enrollment").Find(&students).Error; err != nil {
 		return echo.NewHTTPError(400, err.Error())
 	}
+	studentclass := make([]model.StudentClass, len(students))
+	
+	for s, i := range students{
+		studentclass[s].Student = append(studentclass[s].Student, i)
+		for _, j := range i.Enrollment{
+			var classes model.Class
+			if err:=config.DB.Where("id = ?", j.ClassID).Find(&classes).Error; err != nil{
+				return echo.NewHTTPError(400, "Failed to get class")
+			}
+			studentclass[s].Class = append(studentclass[s].Class, classes)
+		}
+	}
+	
 	return c.JSON(200, echo.Map{
 		"message": "success get all students",
-		"students": students,
+		"students": studentclass,
 	})
 }
 

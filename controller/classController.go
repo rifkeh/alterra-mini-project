@@ -59,7 +59,11 @@ func UpdateClassController(c echo.Context) error {
 func DeleteClassController(c echo.Context) error {
 	var class model.Class
 	classID := c.Param("id")
-	if err := config.DB.Where("id = ?", classID).Delete(&class).Error; err != nil {
+	cookie, err := c.Cookie("TeacherSessionID")
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	if err := config.DB.Where("teacher_id=? AND id = ?", int(middleware.ExtractTeacherIdToken(cookie.Value)) ,classID).Delete(&class).Error; err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return c.JSON(http.StatusOK, echo.Map{
