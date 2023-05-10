@@ -25,13 +25,12 @@ func New() *echo.Echo{
 	e.POST("/teacher/login", controller.LoginTeacherController)
 	// Class Routes
 	e.GET("/classes", controller.GetClassesController)
-	e.POST("/class", controller.CreateClassController)
-	e.PUT("/class/:id", controller.UpdateClassController)
-	e.DELETE("/class/:id", controller.DeleteClassController)
+	t.POST("/class", controller.CreateClassController)
+	t.PUT("/class/:id", controller.UpdateClassController)
+	t.DELETE("/class/:id", controller.DeleteClassController)
 	e.GET("/class/:id", controller.GetClassController)
 	// Student Routes
 	t.GET("/students", controller.GetStudentsController)
-
 	s.GET("/students", controller.GetStudentsController)
 	t.GET("/student/:id", controller.GetStudentController)
 	e.POST("/student/register", controller.CreateStudentController)

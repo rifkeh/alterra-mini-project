@@ -61,10 +61,10 @@ func DeleteClassController(c echo.Context) error {
 	classID := c.Param("id")
 	cookie, err := c.Cookie("TeacherSessionID")
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, "Failed to get cookie")
 	}
 	if err := config.DB.Where("teacher_id=? AND id = ?", int(middleware.ExtractTeacherIdToken(cookie.Value)) ,classID).Delete(&class).Error; err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, "Class does not exist")
 	}
 	return c.JSON(http.StatusOK, echo.Map{
 		"message": "success delete class",
