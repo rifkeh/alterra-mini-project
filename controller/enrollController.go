@@ -23,6 +23,7 @@ func GetEnrollsController(c echo.Context) error {
 
 func CreateEnrollController(c echo.Context) error {
 	var enroll model.Enrollment
+	var class model.Class
 	c.Bind(&enroll)
 	classID, _ := strconv.Atoi(c.Param("classid"))
 	cookie, err := c.Cookie("StudentSessionID")
@@ -32,24 +33,17 @@ func CreateEnrollController(c echo.Context) error {
 	studentID := int (middleware.ExtractStudentIdToken(cookie.Value))
 	enroll.StudentID = studentID
 	enroll.ClassID = classID
+	if err := config.DB.Where("id = ?", classID).First(&class).Error; err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	if class.Password != enroll.Password{
+		return echo.NewHTTPError(http.StatusBadRequest, "wrong password")
+	}
 	if err := config.DB.Save(&enroll).Error; err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return c.JSON(http.StatusOK, echo.Map{
 		"message": "success create enroll",
-		"enroll":  enroll,
-	})
-}
-
-func UpdateEnrollController(c echo.Context) error {
-	var enroll model.Enrollment
-	c.Bind(&enroll)
-	enrollID := c.Param("id")
-	if err := config.DB.Where("id = ?", enrollID).Updates(&enroll).Error; err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-	return c.JSON(http.StatusOK, echo.Map{
-		"message": "success update enroll",
 		"enroll":  enroll,
 	})
 }

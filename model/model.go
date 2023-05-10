@@ -30,6 +30,7 @@ type Enrollment struct {
 	gorm.Model
 	StudentID int	`json:"student_id" form:"student_id"`
 	ClassID   int	`json:"class_id" form:"class_id"`
+	Password string	`json:"password" form:"password"`
 }
 
 type Class struct {
