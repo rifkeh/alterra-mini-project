@@ -60,12 +60,13 @@ func New() *echo.Echo{
 	s.GET("/assignment/:assignmentid/submission", controller.GetAllSubmissionsControllerByAssignment)
 	s.GET("/assignment/:assignmentid/submission/:id", controller.GetSubmissionControllerById)
 	// Material Routes
-	t.GET("/class/:classid/materials", controller.GetMaterialsController)
+	t.GET("/materials", controller.GetMaterialsController)
+	t.GET("/class/:classid/materials", controller.GetMaterialsControllerByClass)
 	t.POST("/class/:classid/material", controller.CreateMaterialController)
 	t.PUT("/class/:classid/material/:id", controller.UpdateMaterialController)
 	t.DELETE("/class/:classid/material/:id", controller.DeleteMaterialController)
 	t.GET("/class/:classid/material/:id", controller.GetMaterialController)
-	s.GET("/class/:classid/materials", controller.GetMaterialsController)
+	s.GET("/class/:classid/materials", controller.GetMaterialsControllerByClass)
 	s.GET("/class/:classid/material/:id", controller.GetMaterialController)
 	return e
 }
