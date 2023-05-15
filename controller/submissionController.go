@@ -6,17 +6,70 @@ import (
 	"fmt"
 	"io/ioutil"
 	"miniproject/config"
+	"miniproject/middleware"
 	"miniproject/model"
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
+
+func GetSubmissionControllerById(c echo.Context) error {
+	var student model.Student
+	var submission model.Submission
+	var assignment model.Assignment
+	submissionID := c.Param("id")
+	if err := config.DB.Where("id = ?", submissionID).Find(&submission).Error; err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	if err := config.DB.Where("id = ?", submission.StudentID).Find(&student).Error; err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	if err := config.DB.Where("id = ?", submission.AssignmentID).Find(&assignment).Error; err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	if submission.File == nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"message": "submission does not have a file",
+		})
+	}
+	contentType := http.DetectContentType(*submission.File)
+	c.Response().Header().Set("Content-Type", contentType)
+	filename := fmt.Sprintf("%s-%s-%s", student.Name, assignment.Title, submissionID)
+	c.Response().Header().Set("Content-Disposition", "attachment; filename="+filename)
+	c.Response().Write(*submission.File)
+	return c.JSON(http.StatusOK, echo.Map{
+		"message":     "success get submission",
+		"submission": submission,
+	})
+}
 
 func UpdateSubmissionController(c echo.Context) error {
 	var submission model.Submission
 	c.Bind(&submission)
 	submissionID := c.Param("id")
-	if err := config.DB.Where("id = ?", submissionID).Updates(&submission).Error; err != nil {
+	classID := c.Param("assignmentid")
+	file, _ := c.FormFile("files")
+	if file != nil {
+		src, err := file.Open()
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, echo.Map{
+				"message": "failed to open file",
+			})
+		}
+		defer src.Close()
+	
+		fileBytes, err := ioutil.ReadAll(src)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, echo.Map{
+				"message": "failed to read file",
+			})
+		}
+	
+		submission.File = &fileBytes
+	}
+	
+	if err := config.DB.Where("id = ? AND assignment_id=?", submissionID, classID).Updates(&submission).Error; err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return c.JSON(http.StatusOK, echo.Map{
@@ -40,6 +93,20 @@ func DeleteSubmissionController(c echo.Context) error {
 func CreateSubmissionController(c echo.Context) error{
 	var submission model.Submission
 	c.Bind(&submission)
+	assignmentID, err := strconv.Atoi(c.Param("assignmentid"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"message": "failed to get assignment id",
+		})
+	}
+	cookie, err := c.Cookie("StudentSessionID")
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"message": "failed to get cookie",
+		})
+	}
+	submission.AssignmentID = assignmentID
+	submission.StudentID = int(middleware.ExtractStudentIdToken(cookie.Value))
 
 	file, err := c.FormFile("files")
 	if err != nil {
