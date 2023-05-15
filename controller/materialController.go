@@ -3,15 +3,42 @@ package controller
 import (
 	"fmt"
 	"miniproject/config"
+	"miniproject/constant"
 	"miniproject/model"
 	"net/http"
 	"strconv"
+	"strings"
 
+	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 )
 
 func GetMaterialsController(c echo.Context) error {
 	var materials []model.Material
+	authHeader := c.Request().Header.Get("Authorization")
+	tokenString := strings.Split(authHeader, " ")[1]
+	if tokenString == "" {
+		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+	}
+
+	// Parse and validate the JWT token
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		if token.Claims.(jwt.MapClaims)["teacherID"] != nil {
+			return []byte(constant.TEACHER_JWT), nil
+		} else if token.Claims.(jwt.MapClaims)["studentID"] != nil {
+			return []byte(constant.STUDENT_JWT), nil
+		}
+
+		return nil, fmt.Errorf("invalid token")
+	})
+
+	if err != nil || !token.Valid {
+		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+	}
 	if err := config.DB.Limit(5).Find(&materials).Error; err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
@@ -69,13 +96,36 @@ func DeleteMaterialController(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, echo.Map{
 		"message":   "success delete material",
-		"material": material,
 	})
 }
 
 func GetMaterialController(c echo.Context) error {
 	var material model.Material
 	materialID := c.Param("id")
+	authHeader := c.Request().Header.Get("Authorization")
+	tokenString := strings.Split(authHeader, " ")[1]
+	if tokenString == "" {
+		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+	}
+
+	// Parse and validate the JWT token
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		if token.Claims.(jwt.MapClaims)["teacherID"] != nil {
+			return []byte(constant.TEACHER_JWT), nil
+		} else if token.Claims.(jwt.MapClaims)["studentID"] != nil {
+			return []byte(constant.STUDENT_JWT), nil
+		}
+
+		return nil, fmt.Errorf("invalid token")
+	})
+
+	if err != nil || !token.Valid {
+		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+	}
 	if err := config.DB.Where("id = ?", materialID).Find(&material).Error; err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}

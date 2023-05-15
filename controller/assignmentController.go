@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"miniproject/config"
+	"miniproject/constant"
 	"miniproject/middleware"
 	"miniproject/model"
 	"net/http"
 	"strconv"
+	"strings"
 
+	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 )
 
@@ -102,16 +105,45 @@ func GetAssignmentController(c echo.Context) error {
 	var assignment model.Assignment
 	assignmentID := c.Param("id")
 	classID := c.Param("classid")
-	if err := config.DB.Where("id = ? AND class_id=?", assignmentID, classID).First(&assignment).Error; err != nil {
+
+	authHeader := c.Request().Header.Get("Authorization")
+	tokenString := strings.Split(authHeader, " ")[1]
+	if tokenString == "" {
+		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+	}
+
+	// Parse and validate the JWT token
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		if token.Claims.(jwt.MapClaims)["teacherID"] != nil {
+			return []byte(constant.TEACHER_JWT), nil
+		} else if token.Claims.(jwt.MapClaims)["studentID"] != nil {
+			return []byte(constant.STUDENT_JWT), nil
+		}
+
+		return nil, fmt.Errorf("invalid token")
+	})
+
+	if err != nil || !token.Valid {
+		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+	}
+
+	if err := config.DB.Where("id = ? AND class_id = ?", assignmentID, classID).First(&assignment).Error; err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+
 	contentType := http.DetectContentType(*assignment.File)
 	c.Response().Header().Set("Content-Type", contentType)
 	filename := fmt.Sprintf("submission-%s", assignmentID)
 	c.Response().Header().Set("Content-Disposition", "attachment; filename="+filename)
 	c.Response().Write(*assignment.File)
+
 	return c.JSON(http.StatusOK, echo.Map{
 		"message":    "success get assignment",
 		"assignment": assignment,
 	})
 }
+

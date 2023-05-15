@@ -48,30 +48,28 @@ func UpdateSubmissionController(c echo.Context) error {
 	var submission model.Submission
 	c.Bind(&submission)
 	submissionID := c.Param("id")
-	file, err := c.FormFile("files")
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{
-			"message": "failed to get file",
-		})
+	classID := c.Param("assignmentid")
+	file, _ := c.FormFile("files")
+	if file != nil {
+		src, err := file.Open()
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, echo.Map{
+				"message": "failed to open file",
+			})
+		}
+		defer src.Close()
+	
+		fileBytes, err := ioutil.ReadAll(src)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, echo.Map{
+				"message": "failed to read file",
+			})
+		}
+	
+		submission.File = &fileBytes
 	}
-	src, err := file.Open()
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{
-			"message": "failed to open file",
-		})
-	}
-	defer src.Close()
-
-	fileBytes, err := ioutil.ReadAll(src)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{
-			"message": "failed to read file",
-		})
-	}
-
-	submission.File = &fileBytes
-
-	if err := config.DB.Where("id = ?", submissionID).Updates(&submission).Error; err != nil {
+	
+	if err := config.DB.Where("id = ? AND assignment_id=?", submissionID, classID).Updates(&submission).Error; err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return c.JSON(http.StatusOK, echo.Map{

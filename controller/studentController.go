@@ -1,23 +1,51 @@
 package controller
 
 import (
+	"fmt"
 	"miniproject/config"
+	"miniproject/constant"
 	"miniproject/lib/database"
 	"miniproject/lib/email"
 	"miniproject/middleware"
 	"miniproject/model"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
+	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 )
 
 func GetStudentsController(c echo.Context) error {
 	var students []model.Student
+	authHeader := c.Request().Header.Get("Authorization")
+	tokenString := strings.Split(authHeader, " ")[1]
+	if tokenString == "" {
+		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+	}
+
+	// Parse and validate the JWT token
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		if token.Claims.(jwt.MapClaims)["teacherID"] != nil {
+			return []byte(constant.TEACHER_JWT), nil
+		} else if token.Claims.(jwt.MapClaims)["studentID"] != nil {
+			return []byte(constant.STUDENT_JWT), nil
+		}
+
+		return nil, fmt.Errorf("invalid token")
+	})
+
+	if err != nil || !token.Valid {
+		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+	}
 	if err := config.DB.Preload("Enrollment").Find(&students).Error; err != nil {
-		return echo.NewHTTPError(400, err.Error())
+		return echo.NewHTTPError(400, "Failed to get students")
 	}
 	studentclass := make([]model.StudentClass, len(students))
 	
@@ -121,6 +149,30 @@ func DeleteStudentController(c echo.Context) error {
 
 func GetStudentController(c echo.Context) error {
 	var student model.Student
+	authHeader := c.Request().Header.Get("Authorization")
+	tokenString := strings.Split(authHeader, " ")[1]
+	if tokenString == "" {
+		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+	}
+
+	// Parse and validate the JWT token
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		if token.Claims.(jwt.MapClaims)["teacherID"] != nil {
+			return []byte(constant.TEACHER_JWT), nil
+		} else if token.Claims.(jwt.MapClaims)["studentID"] != nil {
+			return []byte(constant.STUDENT_JWT), nil
+		}
+
+		return nil, fmt.Errorf("invalid token")
+	})
+
+	if err != nil || !token.Valid {
+		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+	}
 	studentID := c.Param("id")
 	if err := config.DB.Where("id = ?", studentID).First(&student).Error; err != nil {
 		return echo.NewHTTPError(400, err.Error())
