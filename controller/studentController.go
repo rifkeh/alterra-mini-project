@@ -73,24 +73,21 @@ func CreateStudentController(c echo.Context) error {
 	c.Bind(&student)
 	OTP = c.FormValue("OTP")
 	if OTP == ""{
-		tempOTP.Id = 1
 		tempOTP.StudentOTP = email.GenerateOTP()
-		if err := config.DB.Save(&tempOTP).Error; err != nil {
-			return echo.NewHTTPError(400, "Failed to create OTP")
+		tempOTP.StudentEmail = student.Email
+		if err := config.DB.Where("student_email=?", tempOTP.StudentEmail).Save(&tempOTP).Error; err != nil {
+			return echo.NewHTTPError(400, "Failed to create OTP1")
 		}
 		if err := email.SendEmail(student.Name, student.Email, tempOTP.StudentOTP); err != nil {
 			log.Error("Failed to send account creation email:", err)
 		}
-		return echo.NewHTTPError(400, "See your email for OTP")
+		return echo.NewHTTPError(200, "See your email for OTP")
 
 	}else{
-		if err := config.DB.Find(&tempOTP).Error; err != nil {
-			return echo.NewHTTPError(400, "OTP not found")
-		}
-		if tempOTP.StudentOTP == OTP{
-			tempOTP.Id = 1
-			tempOTP.StudentOTP = ""
-			if err := config.DB.Save(&tempOTP).Error; err != nil {
+		if err := config.DB.Where("student_otp =? AND student_email=?", OTP, student.Email).First(&tempOTP).Error; err != nil {
+			return echo.NewHTTPError(400, "Wrong OTP")
+		}else{
+			if err := config.DB.Where("student_otp=? AND student_email=?", OTP, student.Email).Delete(&tempOTP).Error; err != nil {
 				return echo.NewHTTPError(400, "Failed to create OTP")
 			}
 			if err := config.DB.Save(&student).Error; err != nil {
@@ -100,8 +97,6 @@ func CreateStudentController(c echo.Context) error {
 				"message": "success create student",
 				"student": student,
 			})
-		}else{
-			return echo.NewHTTPError(400, "Wrong OTP")
 		}
 	}
 }

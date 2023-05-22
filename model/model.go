@@ -72,7 +72,8 @@ type Submission struct {
 }
 
 type Otp struct {
-	Id	int ``
+	StudentEmail string `json:"student_email" form:"student_email"`
+	TeacherEmail string `json:"teacher_email" form:"teacher_email"`
 	StudentOTP string `json:"student_otp" form:"student_otp"`
 	TeacherOTP string `json:"teacher_otp" form:"teacher_otp"`
 }
