@@ -1,0 +1,25 @@
+version: '3'
+services:
+  app:
+    build:
+      context: .
+    depends_on:
+      - db
+    networks:
+      - backend
+  db:
+    image: mysql:8.0
+    container_name: db_mysql
+    networks:
+      - backend
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_ROOT_HOST=localhost
+      - MYSQL_ROOT_PASSWORD=rifkhi
+      - MYSQL_DATABASE=LMS
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=rifkhi
+networks:
+  backend:
+    driver: bridge
