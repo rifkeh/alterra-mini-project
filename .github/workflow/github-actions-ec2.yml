@@ -3,11 +3,11 @@ name: Push-to-EC2
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   deploy:
-    name: Deploy to EC2 on master branch push
+    name: Deploy to EC2 on main branch push
     runs-on: ubuntu-latest
 
     steps:
@@ -21,3 +21,12 @@ jobs:
           REMOTE_HOST: ${{ secrets.HOST_DNS }}
           REMOTE_USER: ${{ secrets.USERNAME }}
           TARGET: ${{ secrets.TARGET_DIR }}
+          
+      - name : Stop Systemctl
+        run : sudo systemctl stop go-application.service
+          
+      - name : Go Build
+        run : go build .
+        
+      - name : Reload and Start Systemctl
+        run : sudo systemctl daemon-reload && sudo systemctl start go-application.service
