@@ -22,9 +22,6 @@ jobs:
           REMOTE_USER: ${{ secrets.USERNAME }}
           TARGET: ${{ secrets.TARGET_DIR }}
           
-      - name : Stop Systemctl
-        run : sudo systemctl stop go-application.service
-          
       - name : Go Build
         run : go build .
         
