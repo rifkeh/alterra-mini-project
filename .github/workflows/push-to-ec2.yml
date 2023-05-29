@@ -22,7 +22,7 @@ jobs:
         uses: appleboy/ssh-action@master
         with:
           host: ec2-3-25-88-249.ap-southeast-2.compute.amazonaws.com
-          username: admin
+          username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Pull Docker image on AWS server
