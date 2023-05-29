@@ -27,7 +27,7 @@ jobs:
 
       - name: Pull Docker image on AWS server
         run: |
-          ssh ubuntu@3.25.88.249 'go-application'
+          ssh ubuntu@3.25.88.249 'docker pull go-application'
 
       - name: Run Docker container on AWS server
         run: |
