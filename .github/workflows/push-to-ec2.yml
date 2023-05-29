@@ -14,16 +14,11 @@ jobs:
       - name: Checkout the files
         uses: actions/checkout@v2
 
-      - name: Deploy to Server 1
-        uses: easingthemes/ssh-deploy@main
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-          REMOTE_HOST: ${{ secrets.HOST_DNS }}
-          REMOTE_USER: ${{ secrets.USERNAME }}
-          TARGET: ${{ secrets.TARGET_DIR }}
-          
-      - name : Go Build
-        run : go build .
-        
-      - name : Reload and Start Systemctl
-        run : sudo systemctl daemon-reload && sudo systemctl start go-application.service
+      - name: Set up Docker
+        uses: docker/setup-docker@v1
+
+      - name: Build Docker image
+        run: docker build -t go-application .
+
+      - name: Run Docker container
+        run: docker run -dp 8080:8080 go-application
